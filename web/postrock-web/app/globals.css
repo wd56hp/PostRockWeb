@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #faf8f3;
+  --color-foreground: #1f2937;
+  --color-muted: #f3efe8;
+  --color-primary: #2d5a3d;
+  --color-primary-foreground: #faf8f3;
+  --color-secondary: #8b5e3c;
+  --color-secondary-foreground: #faf8f3;
+  --color-accent: #e5a24a;
+  --color-accent-foreground: #1f2937;
+  --color-border: #e5dfd4;
+  --color-ring: #2d5a3d;
+  --radius-lg: 0.5rem;
+  --radius-md: calc(var(--radius-lg) - 2px);
+  --radius-sm: calc(var(--radius-lg) - 4px);
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-heading), Georgia, ui-serif, serif;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  .font-heading {
+    font-family: var(--font-heading), Georgia, ui-serif, serif;
+  }
+
+  @keyframes marquee-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee-scroll 32s linear infinite;
+  }
+}

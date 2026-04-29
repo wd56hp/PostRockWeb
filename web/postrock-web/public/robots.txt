@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://postrockag.com
+
+# Sitemaps
+Sitemap: https://postrockag.com/sitemap.xml

@@ -1,0 +1,26 @@
+import { z } from "zod";
+
+export const contactSchema = z.object({
+  name: z.string().min(1).max(200),
+  email: z.string().email(),
+  phone: z.string().max(40).optional(),
+  topic: z.enum(["General", "Agronomy", "Energy", "Grain", "Feed", "Careers", "Other"]),
+  message: z.string().min(1).max(10000),
+});
+
+export const investorInquirySchema = z.object({
+  name: z.string().min(1).max(200),
+  email: z.string().email(),
+  phone: z.string().max(40).optional(),
+  organization: z.string().min(1).max(300),
+  message: z.string().min(1).max(10000),
+});
+
+export const mailingListSchema = z.object({
+  email: z.string().email(),
+});
+
+export const producerNotifySchema = z.object({
+  email: z.string().email(),
+  name: z.string().max(200).optional(),
+});

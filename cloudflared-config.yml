@@ -1,0 +1,18 @@
+# Cloudflare Tunnel config for Post Rock
+# Use with: cloudflared tunnel --config /path/to/this/file run
+#
+# If using token-based CloudflaredTunnel, add these hostnames in Cloudflare Zero Trust:
+#   Dashboard → Zero Trust → Access → Tunnels → [your tunnel] → Public Hostnames
+#   Add: postrock.com, www.postrock.com, news.postrock.com → http://<unraid-ip>:8088
+
+tunnel: <YOUR_TUNNEL_ID>
+credentials-file: /path/to/credentials.json
+
+ingress:
+  - hostname: postrock.com
+    service: http://host.docker.internal:8088
+  - hostname: www.postrock.com
+    service: http://host.docker.internal:8088
+  - hostname: news.postrock.com
+    service: http://host.docker.internal:8088
+  - service: http_status:404

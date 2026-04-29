@@ -1,0 +1,8 @@
+.env
+.env.*.local
+
+web/postrock-web/node_modules/
+web/postrock-web/.next/
+
+# Local Ghost uploads/content — optional if you keep a Ghost folder on disk for migration
+ghost/content/

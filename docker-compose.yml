@@ -1,0 +1,32 @@
+# Next.js marketing site only — Ghost/MySQL/nginx were removed from this compose file.
+# Production: deploy web/postrock-web to Vercel (see README.md). Run this locally for Docker parity.
+services:
+  postrock-web:
+    build:
+      context: ./web/postrock-web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://postrockag.com}
+        NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL: ${NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL:-}
+        NEXT_PUBLIC_CONTACT_TO_EMAIL: ${NEXT_PUBLIC_CONTACT_TO_EMAIL:-}
+        NEXT_PUBLIC_SANITY_PROJECT_ID: ${NEXT_PUBLIC_SANITY_PROJECT_ID:-}
+        NEXT_PUBLIC_SANITY_DATASET: ${NEXT_PUBLIC_SANITY_DATASET:-production}
+    container_name: postrock-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://postrockag.com}
+      NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL: ${NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL:-}
+      NEXT_PUBLIC_CONTACT_TO_EMAIL: ${NEXT_PUBLIC_CONTACT_TO_EMAIL:-}
+      NEXT_PUBLIC_SANITY_PROJECT_ID: ${NEXT_PUBLIC_SANITY_PROJECT_ID:-}
+      NEXT_PUBLIC_SANITY_DATASET: ${NEXT_PUBLIC_SANITY_DATASET:-production}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      CONTACT_FROM_EMAIL: ${CONTACT_FROM_EMAIL:-}
+      CONTACT_TO_EMAIL: ${CONTACT_TO_EMAIL:-info@postrockag.com}
+      INVESTOR_TO_EMAIL: ${INVESTOR_TO_EMAIL:-investors@postrockag.com}
+      MAILCHIMP_API_KEY: ${MAILCHIMP_API_KEY:-}
+      MAILCHIMP_LIST_ID: ${MAILCHIMP_LIST_ID:-}
+      MAILCHIMP_DC: ${MAILCHIMP_DC:-us21}
+    volumes:
+      - ./web/postrock-web/public:/app/public:ro

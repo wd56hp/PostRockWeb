@@ -1,6 +1,7 @@
 .env
 .env.*.local
 
+/node_modules
 web/postrock-web/node_modules/
 web/postrock-web/.next/
 

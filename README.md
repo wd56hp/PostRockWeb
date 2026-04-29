@@ -8,7 +8,9 @@ Production deploys live on **[Vercel](https://vercel.com)** from GitHub (`web/po
 
 1. Create a repository from this codebase and push the default branch.
 2. **Vercel** → Add New Project → Import the repo.
-3. **Root Directory**: set to `web/postrock-web` (important).
+3. **Root Directory** (pick one):
+   - **Recommended:** set to **`web/postrock-web`**, leave the rest default (native Next.js detection and serverless/middleware from the right folder). In that case you do not need the repo-root `vercel.json` overrides.
+   - **Or** leave Root Directory at **`.`** (repository root). The root **`package.json`** (Next.js version stub) and **`vercel.json`** (`install` / `build` run inside `web/postrock-web`) exist so the build finds `next` and run `npm ci` in the app directory. If anything misbehaves (e.g. middleware), switch to the recommended Root Directory above and remove or empty those root overrides.
 4. **Environment variables**: mirror `web/postrock-web/.env.example` in the project settings (Production + Preview). `NEXT_PUBLIC_*` values affect the bundle at **build time**—redeploy after changing them.
 5. Secrets (`RESEND_API_KEY`, `MAILCHIMP_*`, `CONTACT_*`, etc.) are server-only; add those in Vercel, not in Git.
 

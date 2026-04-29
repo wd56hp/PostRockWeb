@@ -1,0 +1,8 @@
+{
+  "name": "postrock",
+  "private": true,
+  "description": "Repository root shim so Vercel detects Next.js. The Next.js app lives in web/postrock-web.",
+  "dependencies": {
+    "next": "16.1.6"
+  }
+}

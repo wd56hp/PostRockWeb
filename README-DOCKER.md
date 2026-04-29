@@ -23,6 +23,28 @@ Compose runs **`postrock-web`** (Next.js) only. Ghost, MySQL, and nginx were rem
 
 Secrets used only at runtime (Resend, Mailchimp server keys) can pick up **`docker compose up -d postrock-web`** without a rebuild.
 
+## Rebuild with Compose
+
+From the repo root (same folder as **`docker-compose.yml`** and **`.env`**):
+
+```bash
+# Typical: rebuild image and recreate the container
+docker compose up -d --build postrock-web
+
+# Full clean rebuild (invalidate build cache), then recreate
+docker compose build --no-cache postrock-web
+docker compose up -d postrock-web
+```
+
+If **`docker compose` reports the name `postrock-web` is already in use**, a container was probably created earlier with **`docker run`**. Stop using bare **`docker`** for this service and reconcile once:
+
+```bash
+docker rm -f postrock-web
+docker compose up -d --build postrock-web
+```
+
+If **`docker compose` fails** with a permission error on `~/.docker/cli-plugins/docker-compose`, install/fix the Compose V2 CLI plugin (**`chmod +x`** that binary, or install **`docker-compose-plugin`** for your distro).
+
 ## Optional: `public/` volume
 
 `./web/postrock-web/public` is mounted read-only into the container so asset edits on disk are visible without a rebuild (depending on caching).

@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "npm ci && cd web/postrock-web && npm ci",
-  "buildCommand": "cd web/postrock-web && npm run build"
+  "buildCommand": "cd web/postrock-web && npm run build && rm -rf ../../.next && cp -a .next ../.."
 }

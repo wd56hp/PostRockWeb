@@ -8,7 +8,7 @@ const HOST_ROUTES: Record<string, string> = {
   "www.prairieenergyllc.com": "/smoky-hills-agronomy",
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const host = request.nextUrl.hostname.toLowerCase();
   const rewritePath = HOST_ROUTES[host];
 

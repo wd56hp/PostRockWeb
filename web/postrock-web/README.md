@@ -49,6 +49,6 @@ npm run lint      # ESLint (Next flat config)
 - Ensure API secrets (`RESEND_API_KEY`, Mailchimp keys) exist only on the server runtime — never prefix secret keys with `NEXT_PUBLIC_`.
 - When containerizing, copy built `.next` **and** regenerated `public/sitemap.xml` / `public/robots.txt`, or run `npm run build` inside the image with env injected.
 
-## Middleware
+## Proxy (legacy hostname rewrites)
 
-`middleware.ts` contains legacy hostname redirects for domains that previously pointed at agronomy-specific experiences — adjust carefully when DNS cutovers finish.
+`proxy.ts` rewrites alternate hostnames onto `/smoky-hills-agronomy` for domains that previously pointed at agronomy-specific experiences — adjust carefully when DNS cutovers finish.

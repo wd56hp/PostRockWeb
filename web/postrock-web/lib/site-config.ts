@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Post Rock Ag",
   description:
-    "Private agricultural services across grain, feed and supply, marketing, agronomy, and energy — grounded in Central Kansas.",
+    "Your Grain Partner for grain, feed and supply, marketing, agronomy, and energy — grounded in Central Kansas.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://postrockag.com",
   emails: {
     info: "info@postrockag.com",

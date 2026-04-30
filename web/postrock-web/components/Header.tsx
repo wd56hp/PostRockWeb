@@ -44,7 +44,7 @@ export function Header() {
           />
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
           {primaryNav.map((item) => (
             <Link
               key={item.href}
@@ -60,13 +60,18 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className="hidden lg:block">
+          <div className="hidden md:block">
             <LoginDropdown />
           </div>
 
           <Dialog.Root>
             <Dialog.Trigger asChild>
-              <Button variant="ghost" size="sm" className="lg:hidden" aria-label="Open menu">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-foreground md:hidden"
+                aria-label="Open menu"
+              >
                 <Menu className="size-6" />
               </Button>
             </Dialog.Trigger>

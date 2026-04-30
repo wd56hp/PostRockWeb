@@ -39,7 +39,7 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-14 lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-20">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-secondary">
-              Private agricultural services
+              Your Grain Partner
             </p>
             <h1 className="font-heading mt-4 text-4xl font-bold leading-tight text-primary lg:text-5xl">
               Built for producers — grain, feed and supply, marketing, agronomy, and energy.
@@ -111,9 +111,6 @@ export default async function HomePage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="font-heading text-3xl font-semibold text-primary">Services</h2>
-              <p className="mt-3 max-w-2xl text-foreground/85">
-                Five divisions — publish positioning and card blurbs in Sanity (`homePage`).
-              </p>
             </div>
             <Button variant="outline" asChild>
               <Link href="/services">Services overview</Link>
@@ -137,9 +134,6 @@ export default async function HomePage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="font-heading text-3xl font-semibold text-primary">Locations</h2>
-              <p className="mt-3 max-w-2xl text-foreground/85">
-                Regional presence — addresses and detail pages sync from Sanity `location` documents when configured.
-              </p>
             </div>
             <Button variant="outline" asChild>
               <Link href="/locations">All locations</Link>

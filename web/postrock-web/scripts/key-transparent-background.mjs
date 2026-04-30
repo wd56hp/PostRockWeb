@@ -12,8 +12,8 @@ function distL1(a, b) {
   return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
 }
 
-async function keyEdges(jpegPath, pngPath) {
-  const input = await readFile(jpegPath);
+/** @param {Buffer} input */
+async function keyEdgesBuffer(input, pngPath) {
   const { data, info } = await sharp(input).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width: w, height: h, channels } = info;
   if (channels !== 4) throw new Error(`expected RGBA, got ${channels} ch`);
@@ -93,9 +93,24 @@ async function keyEdges(jpegPath, pngPath) {
   console.log("wrote", pngPath, { bgKey, edgePixelsKeyed: qx.length });
 }
 
-const [, , inp, outp] = process.argv;
+async function keyEdges(inputPath, pngPath, opts = {}) {
+  let input = await readFile(inputPath);
+  if (opts.trimThreshold != null) {
+    input = await sharp(input).trim({ threshold: opts.trimThreshold }).toBuffer();
+  }
+  await keyEdgesBuffer(input, pngPath);
+}
+
+const args = process.argv.slice(2).filter(Boolean);
+let trimThreshold;
+const filtered = [];
+for (const a of args) {
+  if (a.startsWith("--trim=")) trimThreshold = Number(a.slice(7));
+  else filtered.push(a);
+}
+const [inp, outp] = filtered;
 if (!inp || !outp) {
-  console.error("usage: key-transparent-background.mjs <input.jpg|png> <output.png>");
+  console.error("usage: key-transparent-background.mjs [--trim=30] <input.jpg|png> <output.png>");
   process.exit(1);
 }
-await keyEdges(inp, outp);
+await keyEdges(inp, outp, { trimThreshold: Number.isFinite(trimThreshold) ? trimThreshold : undefined });

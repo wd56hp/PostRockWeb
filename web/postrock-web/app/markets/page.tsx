@@ -29,9 +29,9 @@ export default async function MarketsPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-14 lg:px-8 lg:py-20">
       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-secondary">Markets</p>
-      <h1 className="font-heading mt-3 text-4xl font-bold text-primary lg:text-5xl">Market data workspace</h1>
+      <h1 className="font-heading mt-3 text-4xl font-bold text-primary lg:text-5xl">Market data coming soon</h1>
       <p className="mt-6 max-w-3xl text-lg leading-relaxed text-foreground/85">
-        Paste vendor-approved embed snippets into Sanity (`marketsPageCopy`) — HTML renders below; plain comments stay in a monospace block.
+         
       </p>
 
       <section className="mt-12 space-y-10 rounded-xl border border-border bg-muted p-8">

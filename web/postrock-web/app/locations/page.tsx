@@ -20,7 +20,7 @@ export default async function LocationsPage() {
       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-secondary">Locations</p>
       <h1 className="font-heading mt-3 text-4xl font-bold text-primary lg:text-5xl">Where we operate</h1>
       <p className="mt-6 max-w-3xl text-lg leading-relaxed text-foreground/85">
-        Addresses and maps sync from Sanity when configured — fallback data keeps builds working offline.
+       
       </p>
 
       <div className="mt-10">

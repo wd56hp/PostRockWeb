@@ -243,13 +243,6 @@ export const getFeaturedTeamMembers = cache(async (): Promise<TeamMember[]> => {
 export async function getDivisionMerged(division: DivisionKey): Promise<DivisionMerged> {
   const route = divisionRouting[division];
   const fb = FB_DIV[division];
-  const doc = await sanityFetch<{
-    agronomy?: RawDiv;
-    energy?: RawDiv;
-    grain?: RawDiv;
-    feed?: RawDiv;
-    marketing?: RawDiv;
-  }>(`*[_type == "divisionCopy"][0]{ agronomy, energy, grain, feed, marketing }`);
 
   type RawDiv = {
     summary?: string;
@@ -260,7 +253,22 @@ export async function getDivisionMerged(division: DivisionKey): Promise<Division
     contacts?: Partial<DivisionContact>[];
   };
 
-  const raw = doc?.[division];
+  const [legacyDoc, serviceDoc] = await Promise.all([
+    sanityFetch<{
+      agronomy?: RawDiv;
+      energy?: RawDiv;
+      grain?: RawDiv;
+      feed?: RawDiv;
+      marketing?: RawDiv;
+    }>(`*[_type == "divisionCopy"][0]{ agronomy, energy, grain, feed, marketing }`),
+    sanityFetch<RawDiv & { _id?: string }>(
+      `*[_type == "service" && divisionKey == $div][0]{ _id, summary, offeringsIntro, bullets, heroCaption, contactsIntro, contacts }`,
+      { div: division },
+    ),
+  ]);
+
+  /** Prefer one `service` document per division; fall back to nested `divisionCopy` fields. */
+  const raw = serviceDoc?._id ? serviceDoc : legacyDoc?.[division];
   const bulletsMerged = padBullets(raw?.bullets, fb.bullets);
   const team = await getTeamMembers();
   const fromTeam = team

@@ -114,9 +114,42 @@ export const siteVisionMission = defineType({
   ],
 });
 
+export const service = defineType({
+  name: "service",
+  title: "Service division",
+  type: "document",
+  fields: [
+    defineField({
+      name: "divisionKey",
+      title: "Which service",
+      type: "string",
+      description: "Create one document per service (five total: Grain, Feed and Supply, Marketing, Agronomy, Energy).",
+      options: {
+        list: divisionOptionList.map(({ title, value }) => ({ title, value })),
+        layout: "radio",
+      },
+      validation: (Rule) => Rule.required(),
+    }),
+    ...divisionBlockFields,
+  ],
+  preview: {
+    select: { divisionKey: "divisionKey" },
+    prepare(selection: Record<string, unknown>): PreviewValue {
+      const dk = selection.divisionKey;
+      const label =
+        typeof dk === "string"
+          ? (divisionOptionList.find((x) => x.value === dk)?.title ?? dk)
+          : "Service division";
+      return { title: label } as PreviewValue;
+    },
+  },
+});
+
 export const divisionCopy = defineType({
   name: "divisionCopy",
-  title: "Service divisions copy",
+  title: "Division copy (legacy fallback)",
+  description:
+    "Single document with nested division fields. Prefer Service division documents (one per service). Content here is used only when no matching Service document exists.",
   type: "document",
   fields: [
     defineField({ name: "agronomy", title: "Agronomy", type: "object", fields: divisionBlockFields }),
@@ -255,6 +288,16 @@ export const location = defineType({
       title: "Services at location",
       type: "array",
       of: [{ type: "string" }],
+      options: {
+        list: [
+          { title: "Grain", value: "Grain" },
+          { title: "Feed and Supply", value: "Feed and Supply" },
+          { title: "Marketing", value: "Marketing" },
+          { title: "Agronomy", value: "Agronomy" },
+          { title: "Energy", value: "Energy" },
+        ],
+        layout: "grid",
+      },
     }),
     defineField({ name: "lat", title: "Latitude", type: "number" }),
     defineField({ name: "lng", title: "Longitude", type: "number" }),
@@ -268,6 +311,7 @@ export const schemaTypes = [
   aboutPage,
   siteVisionMission,
   teamMember,
+  service,
   divisionCopy,
   servicesOverviewCopy,
   careersLandingCopy,

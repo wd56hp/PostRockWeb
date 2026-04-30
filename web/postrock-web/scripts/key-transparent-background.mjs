@@ -1,17 +1,18 @@
 /**
- * One-off: turn a flat JPEG "background" into alpha using corner samples.
- * Avoids eating black detail in the mark when corners match the plate.
+ * Remove solid plate touching image edges via flood-fill from corners
+ * (avoids deleting black/shadow detail inside the mark).
  */
 import sharp from "sharp";
 import { readFile } from "node:fs/promises";
 
-const FUZZ = 38;
+const FUZZ = 28;
+const CORNER_COMPARE = FUZZ * 2;
 
-function dist(a, b) {
+function distL1(a, b) {
   return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
 }
 
-async function keyBackground(jpegPath, pngPath) {
+async function keyEdges(jpegPath, pngPath) {
   const input = await readFile(jpegPath);
   const { data, info } = await sharp(input).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width: w, height: h, channels } = info;
@@ -27,48 +28,74 @@ async function keyBackground(jpegPath, pngPath) {
     [px[idx(w - 1, h - 1)], px[idx(w - 1, h - 1) + 1], px[idx(w - 1, h - 1) + 2]],
   ];
 
-  let key = corners[0];
   let maxCornerDist = 0;
   for (const c of corners) {
-    maxCornerDist = Math.max(maxCornerDist, dist(key, c));
+    for (const d of corners) {
+      maxCornerDist = Math.max(maxCornerDist, distL1(c, d));
+    }
   }
 
-  // If corners disagree a lot, fall back to keying near-black only (legacy exports).
-  const useCorners = maxCornerDist <= FUZZ * 2;
-  const bgKey = useCorners
-    ? [
-        Math.round(corners.reduce((s, c) => s + c[0], 0) / 4),
-        Math.round(corners.reduce((s, c) => s + c[1], 0) / 4),
-        Math.round(corners.reduce((s, c) => s + c[2], 0) / 4),
-      ]
-    : [0, 0, 0];
+  if (maxCornerDist > CORNER_COMPARE) {
+    throw new Error(
+      `corners differ too much (max dist ${maxCornerDist}) — need a flat plate or manual mask`,
+    );
+  }
 
+  const bgKey = [
+    Math.round(corners.reduce((s, c) => s + c[0], 0) / 4),
+    Math.round(corners.reduce((s, c) => s + c[1], 0) / 4),
+    Math.round(corners.reduce((s, c) => s + c[2], 0) / 4),
+  ];
+
+  const rgbNearBg = (i) => distL1([px[i], px[i + 1], px[i + 2]], bgKey) <= FUZZ * 3;
+
+  const seen = new Uint8Array(w * h);
+  const qx = [];
+  const qy = [];
+
+  const tryPush = (x, y) => {
+    if (x < 0 || x >= w || y < 0 || y >= h) return;
+    const p = y * w + x;
+    if (seen[p]) return;
+    const i = idx(x, y);
+    if (!rgbNearBg(i)) return;
+    seen[p] = 1;
+    qx.push(x);
+    qy.push(y);
+  };
+
+  for (let x = 0; x < w; x++) {
+    tryPush(x, 0);
+    tryPush(x, h - 1);
+  }
   for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = idx(x, y);
-      const r = px[i];
-      const g = px[i + 1];
-      const b = px[i + 2];
-      const match =
-        useCorners && maxCornerDist <= FUZZ * 2
-          ? dist([r, g, b], bgKey) <= FUZZ * 3
-          : r <= FUZZ && g <= FUZZ && b <= FUZZ;
-      if (match) {
-        px[i + 3] = 0;
-      }
-    }
+    tryPush(0, y);
+    tryPush(w - 1, y);
+  }
+
+  let qi = 0;
+  while (qi < qx.length) {
+    const x = qx[qi];
+    const y = qy[qi];
+    qi++;
+    const i = idx(x, y);
+    px[i + 3] = 0;
+    tryPush(x + 1, y);
+    tryPush(x - 1, y);
+    tryPush(x, y + 1);
+    tryPush(x, y - 1);
   }
 
   await sharp(Buffer.from(px), { raw: { width: w, height: h, channels: 4 } })
     .png({ compressionLevel: 9 })
     .toFile(pngPath);
 
-  console.log("wrote", pngPath, { useCorners, bgKey, maxCornerDist });
+  console.log("wrote", pngPath, { bgKey, edgePixelsKeyed: qx.length });
 }
 
 const [, , inp, outp] = process.argv;
 if (!inp || !outp) {
-  console.error("usage: key-flat-background.mjs <input.jpg> <output.png>");
+  console.error("usage: key-transparent-background.mjs <input.jpg|png> <output.png>");
   process.exit(1);
 }
-await keyBackground(inp, outp);
+await keyEdges(inp, outp);

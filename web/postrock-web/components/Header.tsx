@@ -35,11 +35,11 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
         <Link href="/" className="flex min-w-0 shrink items-center">
           <Image
-            src={brandImages.postRockLogoHorizontal}
+            src={brandImages.postRockLogoHeader}
             alt={siteConfig.name}
-            width={240}
-            height={64}
-            className="h-8 w-auto max-w-[min(200px,52vw)] sm:h-9 sm:max-w-[220px] lg:h-10"
+            width={1024}
+            height={682}
+            className="h-9 w-auto max-w-[min(220px,52vw)] sm:h-10 sm:max-w-[260px] lg:h-11"
             priority
           />
         </Link>

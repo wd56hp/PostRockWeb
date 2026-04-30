@@ -56,7 +56,7 @@ export default async function HomePage() {
           </div>
           <div className="relative aspect-square w-full max-w-md overflow-hidden rounded-xl border border-border bg-muted/50 p-6 shadow lg:max-w-lg">
             <Image
-              src={brandImages.postRockLogoSquare}
+              src={brandImages.postRockLogoHero}
               alt={siteConfig.name}
               fill
               className="object-contain p-4"

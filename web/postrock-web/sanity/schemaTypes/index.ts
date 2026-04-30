@@ -1,4 +1,4 @@
-import { defineField, defineType } from "sanity";
+import { defineField, defineType, type PreviewValue } from "sanity";
 
 const divisionOptionList = [
   { title: "Grain", value: "grain" },
@@ -218,8 +218,15 @@ export const teamMember = defineType({
   ],
   preview: {
     select: { title: "name", subtitle: "role", media: "photo" },
-    prepare({ title, subtitle, media }: { title?: string; subtitle?: string; media?: unknown }) {
-      return { title: title || "Unnamed", subtitle: subtitle || "", media };
+    prepare(selection: Record<string, unknown>): PreviewValue {
+      const title = selection.title;
+      const subtitle = selection.subtitle;
+      const media = selection.media;
+      return {
+        title: typeof title === "string" && title ? title : "Unnamed",
+        subtitle: typeof subtitle === "string" ? subtitle : "",
+        media,
+      } as PreviewValue;
     },
   },
 });

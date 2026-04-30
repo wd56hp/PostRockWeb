@@ -3,6 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { primaryNav } from "@/lib/nav";
@@ -12,8 +13,22 @@ import { Button } from "@/components/ui/button";
 import { brandImages } from "@/lib/brand-assets";
 import { siteConfig } from "@/lib/site-config";
 
+function navItemIsActive(pathname: string, hash: string, href: string): boolean {
+  if (href === "/about#team") return pathname === "/about" && hash === "#team";
+  if (href === "/about") return pathname === "/about" && hash !== "#team";
+  return pathname === href;
+}
+
 export function Header() {
   const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const sync = () => setHash(typeof window !== "undefined" ? window.location.hash : "");
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -36,7 +51,7 @@ export function Header() {
               href={item.href}
               className={cn(
                 "rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary",
-                pathname === item.href ? "bg-muted text-primary" : "text-foreground/90",
+                navItemIsActive(pathname, hash, item.href) ? "bg-muted text-primary" : "text-foreground/90",
               )}
             >
               {item.label}
@@ -73,7 +88,7 @@ export function Header() {
                         href={item.href}
                         className={cn(
                           "rounded-md px-3 py-3 text-base font-medium hover:bg-muted",
-                          pathname === item.href ? "bg-muted text-primary" : "",
+                          navItemIsActive(pathname, hash, item.href) ? "bg-muted text-primary" : "",
                         )}
                       >
                         {item.label}

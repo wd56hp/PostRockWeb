@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
-import { contactSchema } from "@/lib/validators";
+import { CONTACT_TOPIC_OPTIONS, contactSchema } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,8 @@ export function ContactForm() {
       agronomy: "Agronomy",
       energy: "Energy",
       grain: "Grain",
-      feed: "Feed",
+      feed: "Feed and Supply",
+      marketing: "Marketing",
       careers: "Careers",
       general: "General",
       other: "Other",
@@ -103,7 +104,7 @@ export function ContactForm() {
             className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             {...form.register("topic")}
           >
-            {(["General", "Agronomy", "Energy", "Grain", "Feed", "Careers", "Other"] as const).map((t) => (
+            {CONTACT_TOPIC_OPTIONS.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>

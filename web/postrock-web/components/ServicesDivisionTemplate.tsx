@@ -57,16 +57,25 @@ export function ServicesDivisionTemplate({ merged }: { merged: DivisionMerged })
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <h2 className="font-heading text-3xl font-semibold text-primary">Key contacts</h2>
           <p className="mt-4 max-w-3xl text-sm leading-relaxed text-foreground/80">{d.contactsIntro}</p>
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {d.contacts.some((c) => c.name.trim()) ? (
               d.contacts
                 .filter((c) => c.name.trim())
                 .map((c) => (
                   <Card key={`${c.name}-${c.email}`}>
-                    <CardHeader>
+                    <CardHeader className="items-center space-y-3 text-center">
+                      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+                        {c.photoUrl ? (
+                          <Image src={c.photoUrl} alt={c.name} fill className="object-cover" sizes="96px" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[10px] font-medium text-foreground/45">
+                            No photo
+                          </div>
+                        )}
+                      </div>
                       <CardTitle className="text-lg">{c.name}</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-foreground/80">
+                    <CardContent className="space-y-2 text-center text-sm text-foreground/80">
                       {c.role.trim() ? <p>{c.role}</p> : null}
                       {c.email.trim() ? (
                         <p>
@@ -80,8 +89,9 @@ export function ServicesDivisionTemplate({ merged }: { merged: DivisionMerged })
                   </Card>
                 ))
             ) : (
-              <p className="text-sm text-foreground/70 md:col-span-3">
-                Publish division contacts (name, role, email, phone) in Sanity — they replace these placeholders automatically.
+              <p className="text-sm text-foreground/70 sm:col-span-2 lg:col-span-3 xl:col-span-4">
+                Add Team members in Sanity (with service divisions) or optional extra contacts on division copy — they
+                appear here automatically.
               </p>
             )}
           </div>

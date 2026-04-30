@@ -4,12 +4,12 @@ import { ServicesDivisionTemplate } from "@/components/ServicesDivisionTemplate"
 import { getDivisionMerged } from "@/lib/sanity/loaders";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Feed and Supply Services",
-  description: "Ingredient sourcing and coordination for livestock producers — placeholder division details.",
-  path: "/services/feed",
+  title: "Marketing Services",
+  description: "Grain and ingredient marketing, bids, and logistics coordination — placeholder division details.",
+  path: "/services/marketing",
 });
 
-export default async function FeedPage() {
-  const merged = await getDivisionMerged("feed");
+export default async function MarketingPage() {
+  const merged = await getDivisionMerged("marketing");
   return <ServicesDivisionTemplate merged={merged} />;
 }

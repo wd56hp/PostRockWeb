@@ -4,16 +4,18 @@ import { buildMetadata } from "@/lib/metadata";
 import { brandImages } from "@/lib/brand-assets";
 import { siteConfig } from "@/lib/site-config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAboutCopy, getVisionMission } from "@/lib/sanity/loaders";
+import { TeamMemberCard } from "@/components/TeamMemberCard";
+import { VisionMissionSection } from "@/components/VisionMissionSection";
+import { getAboutCopy, getTeamMembers, getVisionMission } from "@/lib/sanity/loaders";
 
 export const metadata: Metadata = buildMetadata({
   title: "About",
-  description: "Company story, leadership, mission, and values — Post Rock Ag.",
+  description: "Company story, team, leadership, mission, and values — Post Rock Ag.",
   path: "/about",
 });
 
 export default async function AboutPage() {
-  const [visionMissionValues, about] = await Promise.all([getVisionMission(), getAboutCopy()]);
+  const [visionMissionValues, about, team] = await Promise.all([getVisionMission(), getAboutCopy(), getTeamMembers()]);
   const leaders = about.leaders.filter((l) => (l.name ?? "").trim());
 
   return (
@@ -41,26 +43,24 @@ export default async function AboutPage() {
       </div>
 
       <section className="mt-16">
-        <h2 className="font-heading text-3xl font-semibold text-primary">Vision, mission & values</h2>
-        <div className="mt-8 grid gap-8 lg:grid-cols-2">
-          <div className="rounded-xl border border-border bg-background p-8 shadow-sm">
-            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-secondary">Vision</h3>
-            <p className="mt-4 text-lg font-semibold text-primary">{visionMissionValues.vision}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-background p-8 shadow-sm">
-            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-secondary">Mission</h3>
-            <p className="mt-4 text-lg font-semibold text-primary">{visionMissionValues.mission}</p>
-          </div>
+        <VisionMissionSection content={visionMissionValues} />
+      </section>
+
+      <section id="team" className="mt-16 scroll-mt-24">
+        <h2 className="font-heading text-3xl font-semibold text-primary">Team</h2>
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-foreground/85">
+          Each profile can include a photo, bio, and contact info. Pick one or more service divisions so the same person
+          appears under Key contacts on those service pages.
+        </p>
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {team.length === 0 ? (
+            <p className="text-sm text-foreground/70 sm:col-span-2 lg:col-span-3">
+              Create Team member documents with a photo, contact fields, and one or more service divisions.
+            </p>
+          ) : (
+            team.map((m) => <TeamMemberCard key={m.id} member={m} />)
+          )}
         </div>
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2">
-          {visionMissionValues.values.map((v) => (
-            <li key={v.title} className="rounded-lg border border-border bg-muted px-5 py-4 text-sm">
-              <span className="font-semibold text-primary">{v.title}</span>
-              <span className="text-foreground/70"> — </span>
-              {v.text}
-            </li>
-          ))}
-        </ul>
       </section>
 
       <section className="mt-16">

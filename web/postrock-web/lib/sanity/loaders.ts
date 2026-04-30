@@ -1,18 +1,40 @@
 import fs from "fs";
 import path from "path";
+import type { SanityImageSource } from "@sanity/image-url";
+import { cache } from "react";
 
 import type { DivisionKey } from "@/lib/services-meta";
-import { divisionRouting } from "@/lib/services-meta";
+import { DIVISION_KEYS_ORDERED, divisionRouting } from "@/lib/services-meta";
 import type { LocationEntry } from "@/lib/data/locations";
 import { fallbackLocations } from "@/lib/data/locations";
 import { fallbackVisionMission } from "@/lib/sanity/fallbacks";
 import { sanityFetch } from "@/lib/sanity/client";
+import { sanityImageUrl } from "@/lib/sanity/image";
 
 export type VisionMissionContent = typeof fallbackVisionMission;
 
 export type LeaderCard = { name?: string; role?: string; bio?: string };
 
-export type DivisionContact = { name: string; role: string; email: string; phone: string };
+export type DivisionContact = {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  /** Populated from Team member photos when assigned to this division. */
+  photoUrl?: string | null;
+};
+
+export type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  bio: string;
+  photoUrl: string | null;
+  divisions: DivisionKey[];
+  featuredOnHome: boolean;
+};
 
 export type DivisionMerged = {
   title: string;
@@ -35,12 +57,39 @@ function pick(...vals: (string | null | undefined)[]): string {
 
 function normalizeContacts(rows: Partial<DivisionContact>[] | null | undefined): DivisionContact[] {
   if (!rows?.length) return [];
-  return rows.slice(0, 3).map((r) => ({
+  return rows.slice(0, 6).map((r) => ({
     name: pick(r?.name),
     role: pick(r?.role),
     email: pick(r?.email),
     phone: pick(r?.phone),
+    photoUrl: null,
   }));
+}
+
+function isDivisionKey(s: string): s is DivisionKey {
+  return (DIVISION_KEYS_ORDERED as readonly string[]).includes(s);
+}
+
+function parseDivisions(val: unknown): DivisionKey[] {
+  if (!Array.isArray(val)) return [];
+  const out: DivisionKey[] = [];
+  for (const x of val) {
+    if (typeof x === "string" && isDivisionKey(x)) out.push(x);
+  }
+  return out;
+}
+
+function dedupeContacts(list: DivisionContact[]): DivisionContact[] {
+  const seen = new Set<string>();
+  const out: DivisionContact[] = [];
+  for (const c of list) {
+    const emailKey = pick(c.email).toLowerCase();
+    const key = emailKey || `${pick(c.name)}|${pick(c.role)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(c);
+  }
+  return out;
 }
 
 function padBullets(bullets: string[] | null | undefined, fb: string[]): string[] {
@@ -108,11 +157,88 @@ const FB_DIV: Record<
       "Inbound freight coordination sized for seasonal usage curves.",
       "Documentation discipline across weights and settlements.",
     ],
-    heroCaption: "Feed ingredients",
-    contactsIntro: "Feed contacts — publish in Sanity.",
+    heroCaption: "Feed and supply",
+    contactsIntro: "Feed and supply contacts — publish in Sanity.",
+    contacts: [],
+  },
+  marketing: {
+    summary:
+      "Grain and ingredient marketing aligned with transparent bids, contract discipline, and execution you can plan around.",
+    offeringsIntro:
+      "Cash marketing, hedging conversations, and logistics coordination tied to your operational calendar — not generic brokerage pitch decks.",
+    bullets: [
+      "Bid and basis transparency with contracting language reviewed for clarity.",
+      "Freight and elevation coordination across your preferred lanes.",
+      "Settlement support aligned with scale tickets and commercial expectations.",
+    ],
+    heroCaption: "Marketing desk",
+    contactsIntro: "Marketing contacts — publish in Sanity.",
     contacts: [],
   },
 };
+
+function mapTeamMemberRow(row: {
+  _id?: string;
+  name?: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  photo?: SanityImageSource | null;
+  divisions?: unknown;
+  featuredOnHome?: boolean;
+}): TeamMember | null {
+  const name = pick(row.name);
+  if (!name) return null;
+  return {
+    id: pick(row._id),
+    name,
+    role: pick(row.role),
+    email: pick(row.email),
+    phone: pick(row.phone),
+    bio: pick(row.bio),
+    photoUrl: sanityImageUrl(row.photo ?? undefined, { width: 640, height: 800 }),
+    divisions: parseDivisions(row.divisions),
+    featuredOnHome: Boolean(row.featuredOnHome),
+  };
+}
+
+/** All team members (Sanity `teamMember` documents), sorted by name. */
+export const getTeamMembers = cache(async (): Promise<TeamMember[]> => {
+  const rows = await sanityFetch<
+    {
+      _id?: string;
+      name?: string;
+      role?: string;
+      email?: string;
+      phone?: string;
+      bio?: string;
+      photo?: SanityImageSource | null;
+      divisions?: unknown;
+      featuredOnHome?: boolean;
+    }[]
+  >(
+    `*[_type == "teamMember"] | order(name asc) {
+      _id,
+      name,
+      role,
+      email,
+      phone,
+      bio,
+      photo,
+      divisions,
+      featuredOnHome
+    }`,
+  );
+  const mapped = rows?.map(mapTeamMemberRow).filter(Boolean) as TeamMember[] | undefined;
+  return mapped ?? [];
+});
+
+/** Subset flagged for the home page team strip (max six). */
+export const getFeaturedTeamMembers = cache(async (): Promise<TeamMember[]> => {
+  const all = await getTeamMembers();
+  return all.filter((m) => m.featuredOnHome).slice(0, 6);
+});
 
 export async function getDivisionMerged(division: DivisionKey): Promise<DivisionMerged> {
   const route = divisionRouting[division];
@@ -122,7 +248,8 @@ export async function getDivisionMerged(division: DivisionKey): Promise<Division
     energy?: RawDiv;
     grain?: RawDiv;
     feed?: RawDiv;
-  }>(`*[_type == "divisionCopy"][0]{ agronomy, energy, grain, feed }`);
+    marketing?: RawDiv;
+  }>(`*[_type == "divisionCopy"][0]{ agronomy, energy, grain, feed, marketing }`);
 
   type RawDiv = {
     summary?: string;
@@ -135,7 +262,21 @@ export async function getDivisionMerged(division: DivisionKey): Promise<Division
 
   const raw = doc?.[division];
   const bulletsMerged = padBullets(raw?.bullets, fb.bullets);
-  const mergedContacts = normalizeContacts(raw?.contacts);
+  const team = await getTeamMembers();
+  const fromTeam = team
+    .filter((m) => m.divisions.includes(division))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(
+      (m): DivisionContact => ({
+        name: m.name,
+        role: m.role,
+        email: m.email,
+        phone: m.phone,
+        photoUrl: m.photoUrl,
+      }),
+    );
+  const inline = normalizeContacts(raw?.contacts);
+  const mergedContacts = dedupeContacts([...fromTeam, ...inline]);
 
   return {
     title: route.title,
@@ -152,13 +293,15 @@ export async function getDivisionMerged(division: DivisionKey): Promise<Division
 export async function getHomeCopy() {
   const fb = {
     heroTagline:
-      "Regional agronomy, energy, grain, and feed executed with disciplined coordination — transparent bids, dependable logistics, and field execution aligned with your acres.",
+      "Grain, feed and supply, marketing, agronomy, and energy — executed with disciplined coordination, transparent bids, dependable logistics, and field conversations aligned with your acres.",
     heroImageCaption: "Operations grounded in producer outcomes.",
     servicesCardAgronomy:
       "Crop nutrition, crop protection, seed recommendations, and agronomic discipline aligned with your acres.",
     servicesCardEnergy: "Fuel products and dependable delivery scheduling sized for agricultural operations.",
     servicesCardGrain: "Origination, logistics, and grain marketing grounded in execution — not hype.",
     servicesCardFeed: "Ingredient sourcing and coordination purpose-built for livestock producers.",
+    servicesCardMarketing:
+      "Cash marketing, basis, and logistics coordinated with merchandising — clear bids and dependable execution.",
   };
   const doc = await sanityFetch<{
     heroTagline?: string;
@@ -167,8 +310,9 @@ export async function getHomeCopy() {
     servicesCardEnergy?: string;
     servicesCardGrain?: string;
     servicesCardFeed?: string;
+    servicesCardMarketing?: string;
   }>(
-    `*[_type == "homePage"][0]{ heroTagline, heroImageCaption, servicesCardAgronomy, servicesCardEnergy, servicesCardGrain, servicesCardFeed }`,
+    `*[_type == "homePage"][0]{ heroTagline, heroImageCaption, servicesCardAgronomy, servicesCardEnergy, servicesCardGrain, servicesCardFeed, servicesCardMarketing }`,
   );
   return {
     heroTagline: pick(doc?.heroTagline, fb.heroTagline),
@@ -177,6 +321,7 @@ export async function getHomeCopy() {
     servicesCardEnergy: pick(doc?.servicesCardEnergy, fb.servicesCardEnergy),
     servicesCardGrain: pick(doc?.servicesCardGrain, fb.servicesCardGrain),
     servicesCardFeed: pick(doc?.servicesCardFeed, fb.servicesCardFeed),
+    servicesCardMarketing: pick(doc?.servicesCardMarketing, fb.servicesCardMarketing),
   };
 }
 
@@ -221,7 +366,7 @@ export async function getVisionMission(): Promise<VisionMissionContent> {
 }
 
 const FB_ABOUT_HISTORY =
-  "Post Rock Ag organizes agronomy, energy, grain, and feed capabilities around disciplined execution — predictable bids, dependable freight, and field conversations grounded in economics rather than hype.";
+  "Post Rock Ag organizes grain, feed and supply, marketing, agronomy, and energy around disciplined execution — predictable bids, dependable freight, and field conversations grounded in economics rather than hype.";
 
 const FB_ABOUT_HERO_CAPTION = "Grounded execution across agricultural services";
 
@@ -252,18 +397,23 @@ export async function getServicesOverviewCopy() {
     energy: "Fuel products and dependable logistics scheduling sized for farms and rural fuel partners.",
     grain: "Origination, logistics, and merchandising grounded in transparent bids and freight coordination.",
     feed: "Ingredient sourcing and formulation support coordinated across livestock demand curves.",
+    marketing:
+      "Cash marketing, basis, and logistics coordinated with your operation — contracting and freight without the noise.",
   };
-  const doc = await sanityFetch<Partial<typeof fb>>(`*[_type == "servicesOverviewCopy"][0]{ agronomy, energy, grain, feed }`);
+  const doc = await sanityFetch<Partial<typeof fb>>(
+    `*[_type == "servicesOverviewCopy"][0]{ agronomy, energy, grain, feed, marketing }`,
+  );
   return {
     agronomy: pick(doc?.agronomy, fb.agronomy),
     energy: pick(doc?.energy, fb.energy),
     grain: pick(doc?.grain, fb.grain),
     feed: pick(doc?.feed, fb.feed),
+    marketing: pick(doc?.marketing, fb.marketing),
   };
 }
 
 const FB_CAREERS_WHY =
-  "Post Rock Ag prizes disciplined execution — predictable bids, dependable freight, and field conversations grounded in economics rather than hype. Teammates earn autonomy through accountability.";
+  "Post Rock Ag prizes disciplined execution across grain, feed and supply, marketing, agronomy, and energy — predictable bids, dependable freight, and field conversations grounded in economics rather than hype. Teammates earn autonomy through accountability.";
 
 const FB_CAREERS_BENEFITS =
   "Benefits packages vary by role and location — publish finalized summaries here once HR confirms eligibility, enrollment windows, and carrier partners.";
@@ -336,7 +486,15 @@ export const LOCATION_DETAIL_FALLBACK =
 
 function svc(val: unknown): LocationEntry["services"][number] | null {
   const s = typeof val === "string" ? val.trim() : "";
-  if (s === "Agronomy" || s === "Energy" || s === "Grain" || s === "Feed") return s;
+  if (s === "Feed") return "Feed and Supply";
+  if (
+    s === "Agronomy" ||
+    s === "Energy" ||
+    s === "Grain" ||
+    s === "Feed and Supply" ||
+    s === "Marketing"
+  )
+    return s;
   return null;
 }
 

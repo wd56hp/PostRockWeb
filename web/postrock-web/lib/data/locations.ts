@@ -9,7 +9,7 @@ export type LocationEntry = {
   zip: string;
   phone: string;
   hours: string;
-  services: ("Agronomy" | "Energy" | "Grain" | "Feed")[];
+  services: ("Agronomy" | "Energy" | "Grain" | "Feed and Supply" | "Marketing")[];
   lat: number;
   lng: number;
   /** Optional rich body for `/locations/[slug]` — populated from Sanity `detailBody`. */
@@ -52,7 +52,7 @@ export const fallbackLocations: LocationEntry[] = [
     zip: "",
     phone: "",
     hours: "Mon–Sat 7:30–17:30",
-    services: ["Grain", "Feed"],
+    services: ["Grain", "Feed and Supply"],
     lat: 39.1135,
     lng: -97.7336,
   },

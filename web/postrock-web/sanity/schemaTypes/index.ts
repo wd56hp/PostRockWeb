@@ -1,5 +1,13 @@
 import { defineField, defineType } from "sanity";
 
+const divisionOptionList = [
+  { title: "Grain", value: "grain" },
+  { title: "Feed and Supply", value: "feed" },
+  { title: "Marketing", value: "marketing" },
+  { title: "Agronomy", value: "agronomy" },
+  { title: "Energy", value: "energy" },
+] as const;
+
 const divisionBlockFields = [
   defineField({ name: "summary", title: "Summary paragraph", type: "text", rows: 6 }),
   defineField({ name: "offeringsIntro", title: "What we offer — intro", type: "text", rows: 4 }),
@@ -13,7 +21,9 @@ const divisionBlockFields = [
   defineField({ name: "contactsIntro", title: "Key contacts intro", type: "text", rows: 3 }),
   defineField({
     name: "contacts",
-    title: "Contacts (up to 3)",
+    title: "Extra contacts (optional, no photo)",
+    description:
+      "Ad-hoc contacts for this division. For employees with a headshot, create a Team member instead and assign service divisions there — they appear here automatically.",
     type: "array",
     of: [
       {
@@ -39,7 +49,8 @@ export const homePage = defineType({
     defineField({ name: "servicesCardAgronomy", title: "Services card — Agronomy", type: "text", rows: 3 }),
     defineField({ name: "servicesCardEnergy", title: "Services card — Energy", type: "text", rows: 3 }),
     defineField({ name: "servicesCardGrain", title: "Services card — Grain", type: "text", rows: 3 }),
-    defineField({ name: "servicesCardFeed", title: "Services card — Feed", type: "text", rows: 3 }),
+    defineField({ name: "servicesCardFeed", title: "Services card — Feed and Supply", type: "text", rows: 3 }),
+    defineField({ name: "servicesCardMarketing", title: "Services card — Marketing", type: "text", rows: 3 }),
   ],
 });
 
@@ -111,7 +122,8 @@ export const divisionCopy = defineType({
     defineField({ name: "agronomy", title: "Agronomy", type: "object", fields: divisionBlockFields }),
     defineField({ name: "energy", title: "Energy", type: "object", fields: divisionBlockFields }),
     defineField({ name: "grain", title: "Grain", type: "object", fields: divisionBlockFields }),
-    defineField({ name: "feed", title: "Feed", type: "object", fields: divisionBlockFields }),
+    defineField({ name: "feed", title: "Feed and Supply", type: "object", fields: divisionBlockFields }),
+    defineField({ name: "marketing", title: "Marketing", type: "object", fields: divisionBlockFields }),
   ],
 });
 
@@ -123,7 +135,8 @@ export const servicesOverviewCopy = defineType({
     defineField({ name: "agronomy", title: "Agronomy card blurb", type: "text", rows: 3 }),
     defineField({ name: "energy", title: "Energy card blurb", type: "text", rows: 3 }),
     defineField({ name: "grain", title: "Grain card blurb", type: "text", rows: 3 }),
-    defineField({ name: "feed", title: "Feed card blurb", type: "text", rows: 3 }),
+    defineField({ name: "feed", title: "Feed and Supply card blurb", type: "text", rows: 3 }),
+    defineField({ name: "marketing", title: "Marketing card blurb", type: "text", rows: 3 }),
   ],
 });
 
@@ -168,6 +181,49 @@ export const legalSiteCopy = defineType({
   ],
 });
 
+export const teamMember = defineType({
+  name: "teamMember",
+  title: "Team member",
+  type: "document",
+  fields: [
+    defineField({ name: "name", title: "Name", type: "string", validation: (Rule) => Rule.required() }),
+    defineField({ name: "role", title: "Role / title", type: "string" }),
+    defineField({ name: "email", title: "Email", type: "string" }),
+    defineField({ name: "phone", title: "Phone", type: "string" }),
+    defineField({ name: "bio", title: "Bio (About page)", type: "text", rows: 4 }),
+    defineField({
+      name: "photo",
+      title: "Photo",
+      type: "image",
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: "divisions",
+      title: "Service divisions",
+      description: "This person appears under Key contacts on each selected service page.",
+      type: "array",
+      of: [{ type: "string" }],
+      options: {
+        list: divisionOptionList.map(({ title, value }) => ({ title, value })),
+        layout: "grid",
+      },
+    }),
+    defineField({
+      name: "featuredOnHome",
+      title: "Featured on home page",
+      description: "When enabled, may appear in the home “Team” strip (up to six featured members).",
+      type: "boolean",
+      initialValue: false,
+    }),
+  ],
+  preview: {
+    select: { title: "name", subtitle: "role", media: "photo" },
+    prepare({ title, subtitle, media }: { title?: string; subtitle?: string; media?: unknown }) {
+      return { title: title || "Unnamed", subtitle: subtitle || "", media };
+    },
+  },
+});
+
 export const location = defineType({
   name: "location",
   title: "Location",
@@ -204,6 +260,7 @@ export const schemaTypes = [
   contactPage,
   aboutPage,
   siteVisionMission,
+  teamMember,
   divisionCopy,
   servicesOverviewCopy,
   careersLandingCopy,
